@@ -11,6 +11,7 @@ const {
   finalizeModelResult,
   normalizeAnthropic,
   normalizeAutoMode,
+  normalizeChat,
   normalizeResponses,
   normalizeStructured,
   normalizeToolCalls,
@@ -18,6 +19,46 @@ const {
   responsesResponse,
   validateSchema
 } = require('../src/protocol');
+const { buildDirectRequest } = require('../src/direct-provider');
+
+test('Anthropic, Chat, and Responses image blocks reach native inlineData', () => {
+  const data = Buffer.from('image bytes').toString('base64');
+  const cases = [
+    normalizeAnthropic({ messages: [{ role: 'user', content: [
+      { type: 'text', text: 'describe' },
+      { type: 'image', source: { type: 'base64', media_type: 'image/png', data } }
+    ] }] }),
+    normalizeChat({ messages: [{ role: 'user', content: [
+      { type: 'text', text: 'describe' },
+      { type: 'image_url', image_url: { url: `data:image/png;base64,${data}` } }
+    ] }] }),
+    normalizeResponses({ input: [{ role: 'user', content: [
+      { type: 'input_text', text: 'describe' },
+      { type: 'input_image', image_url: `data:image/png;base64,${data}` }
+    ] }] })
+  ];
+  for (const normalized of cases) {
+    const request = buildDirectRequest(normalized, 'gemini-test-high', 'project-1', '-123');
+    assert.deepEqual(request.request.contents[0].parts, [
+      { text: 'describe' }, { inlineData: { mimeType: 'image/png', data } }
+    ]);
+    assert.doesNotMatch(normalized.messages[0].text, new RegExp(data));
+  }
+});
+
+test('remote and oversized images degrade while file and audio still fail', () => {
+  const remote = normalizeChat({ messages: [{ role: 'user', content: [
+    { type: 'image_url', image_url: { url: 'https://example.com/photo.png' } }
+  ] }] });
+  assert.deepEqual(remote.messages[0].parts, [{ type: 'text', text: '[IMAGE https://example.com/photo.png]' }]);
+  const oversized = normalizeAnthropic({ messages: [{ role: 'user', content: [
+    { type: 'image', source: { type: 'base64', media_type: 'image/png', data: 'A'.repeat(28 * 1024 * 1024) } }
+  ] }] });
+  assert.deepEqual(oversized.messages[0].parts, [{ type: 'text', text: '[IMAGE omitted: exceeds 20MB]' }]);
+  for (const type of ['file', 'audio']) {
+    assert.throws(() => normalizeAnthropic({ messages: [{ role: 'user', content: [{ type }] }] }), /不支持/);
+  }
+});
 
 test('Claude Code provider identity marker is neutralized without dropping system instructions', () => {
   const normalized = normalizeAnthropic({

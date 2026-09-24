@@ -46,6 +46,34 @@ function toolResultPart(id, content, name, isError = false) {
   };
 }
 
+const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
+
+function imagePart(block) {
+  const source = block.source || {};
+  const value = block.image_url?.url || block.image_url || source.url || '';
+  let mimeType = source.media_type || '';
+  let data = source.type === 'base64' ? source.data : '';
+  if (!data && typeof value === 'string') {
+    const match = /^data:(image\/[a-z0-9.+-]+);base64,([\s\S]*)$/i.exec(value);
+    if (match) [, mimeType, data] = match;
+    else if (/^https?:\/\//i.test(value)) return { type: 'text', text: `[IMAGE ${value}]` };
+  }
+  if (!data || !/^image\/(?:png|jpeg|webp|gif)$/i.test(mimeType)) {
+    return { type: 'text', text: '[IMAGE unavailable]' };
+  }
+  const encoded = String(data).replace(/\s/g, '');
+  if (encoded.length > Math.ceil(MAX_IMAGE_BYTES / 3) * 4 + 4) {
+    return { type: 'text', text: '[IMAGE omitted: exceeds 20MB]' };
+  }
+  if (!/^[A-Za-z0-9+/]*={0,2}$/.test(encoded) || encoded.length % 4 !== 0) {
+    return { type: 'text', text: '[IMAGE unavailable]' };
+  }
+  if (Buffer.from(encoded, 'base64').length > MAX_IMAGE_BYTES) {
+    return { type: 'text', text: '[IMAGE omitted: exceeds 20MB]' };
+  }
+  return { type: 'image', mimeType: mimeType.toLowerCase(), data: encoded };
+}
+
 function internalPartsFromContent(content, protocol) {
   if (typeof content === 'string') return content ? [{ type: 'text', text: content }] : [];
   if (content == null) return [];
@@ -65,6 +93,8 @@ function internalPartsFromContent(content, protocol) {
     }
     if (['text', 'input_text', 'output_text'].includes(block.type)) {
       if (block.text != null && String(block.text)) parts.push({ type: 'text', text: String(block.text) });
+    } else if (['image', 'input_image', 'image_url'].includes(block.type)) {
+      parts.push(imagePart(block));
     } else if (block.type === 'tool_use') {
       parts.push(toolCallPart(block.id, block.name, block.input, block.signature || block.thoughtSignature || pendingSignature));
       pendingSignature = '';
@@ -106,7 +136,10 @@ function textFromContent(content, protocol) {
       parts.push(`[CLIENT_TOOL_RESULT id=${block.call_id || ''}]\n${typeof block.output === 'string' ? block.output : compactJson(block.output)}`);
     } else if (['thinking', 'redacted_thinking'].includes(block.type)) {
       continue;
-    } else if (['image', 'input_image', 'file', 'input_file', 'audio', 'input_audio'].includes(block.type)) {
+    } else if (['image', 'input_image', 'image_url'].includes(block.type)) {
+      const part = imagePart(block);
+      parts.push(part.type === 'text' ? part.text : '[IMAGE]');
+    } else if (['file', 'input_file', 'audio', 'input_audio'].includes(block.type)) {
       throw new GatewayError(`当前 Antigravity CLI 文本桥不支持 ${block.type} 输入。`, {
         code: 'unsupported_content_type', status: 400
       });

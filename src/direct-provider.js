@@ -377,6 +377,9 @@ function contentsFromNormalized(normalized, thoughtSignatures = null, model = ''
         } });
         continue;
       }
+      if (part?.type === 'image' && part.mimeType && part.data) {
+        nativeParts.push({ inlineData: { mimeType: part.mimeType, data: part.data } });
+      }
       if (part?.type === 'text' && String(part.text || '')) nativeParts.push({ text: String(part.text) });
     }
     if (nativeParts.length) contents.push({ role: normalizedRole(message.role), parts: nativeParts });
