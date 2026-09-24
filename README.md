@@ -65,7 +65,7 @@ winget install --exact --id OpenJS.NodeJS.LTS
 一条命令全局安装，不需要克隆仓库，也不需要进入项目目录：
 
 ```bash
-npm install --global --foreground-scripts --allow-scripts=antigravity-gateway https://github.com/LeeFeee/antigravity-gateway/archive/refs/heads/main.tar.gz
+npm install --global --foreground-scripts --allow-scripts=antigravity-gateway https://github.com/RAYMEN-BBB/antigravity-gateway/archive/refs/heads/main.tar.gz
 ```
 
 验证版本：
@@ -331,7 +331,7 @@ antigravity-gateway stats
 更新：
 
 ```bash
-npm install --global --foreground-scripts --allow-scripts=antigravity-gateway https://github.com/LeeFeee/antigravity-gateway/archive/refs/heads/main.tar.gz
+npm install --global --foreground-scripts --allow-scripts=antigravity-gateway https://github.com/RAYMEN-BBB/antigravity-gateway/archive/refs/heads/main.tar.gz
 ```
 
 更新后必须重启正在运行的网关。前台模式按 `Ctrl+C` 后重新运行；后台模式执行：
@@ -482,7 +482,7 @@ winget install --exact --id OpenJS.NodeJS.LTS
 Install globally from any directory:
 
 ```bash
-npm install --global --foreground-scripts --allow-scripts=antigravity-gateway https://github.com/LeeFeee/antigravity-gateway/archive/refs/heads/main.tar.gz
+npm install --global --foreground-scripts --allow-scripts=antigravity-gateway https://github.com/RAYMEN-BBB/antigravity-gateway/archive/refs/heads/main.tar.gz
 ```
 
 Foreground mode:
@@ -644,7 +644,7 @@ The browser dashboard shows lifetime and selected-period Tokens, requests, upstr
 Update:
 
 ```bash
-npm install --global --foreground-scripts --allow-scripts=antigravity-gateway https://github.com/LeeFeee/antigravity-gateway/archive/refs/heads/main.tar.gz
+npm install --global --foreground-scripts --allow-scripts=antigravity-gateway https://github.com/RAYMEN-BBB/antigravity-gateway/archive/refs/heads/main.tar.gz
 ```
 
 Restart the foreground process after updating, or run `antigravity-gateway service start` again for background mode.
