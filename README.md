@@ -21,6 +21,9 @@ Antigravity Gateway 是一个本地 Anthropic/OpenAI 兼容网关。它复用官
 - 多账号之间轮询；同一会话保持账号一致，限流、认证或额度异常时自动尝试其他账号。
 - 启动界面显示账号状态、历史用量、Token、缓存命中率和最近24小时图表。
 - 支持客户端工具调用、SSE、Claude Code Auto Mode 和结构化输出。
+- 支持 Anthropic Messages、OpenAI Chat Completions 和 Responses 请求中的 base64 图片输入，并转发为模型原生图片内容。
+
+图片输入支持 PNG、JPEG、WebP、GIF，每张最多 20 MB。远程 HTTP(S) 图片 URL 和超过限制的图片会变成文字占位；模型不会看到原图。文件和音频输入仍不支持。可用的图片理解能力取决于当前账号和上游模型；图像生成是另一项能力。
 
 ### 使用条件
 
@@ -445,6 +448,9 @@ Current version: `v0.7.0`. See [CHANGELOG.md](CHANGELOG.md) for release notes.
 - Sticky-session account rotation and failover on authentication, quota, or rate-limit failures.
 - Request, token, cache, account, quota, and 24-hour usage displays.
 - Client-side tools, SSE, Claude Code Auto Mode, and structured output support.
+- Base64 image inputs through Anthropic Messages, OpenAI Chat Completions, and Responses, forwarded as native model image parts.
+
+Image input accepts PNG, JPEG, WebP, and GIF up to 20 MB per image. Remote HTTP(S) image URLs and oversized images become text placeholders, so the model does not see their pixels. File and audio input remain unsupported. Image understanding depends on the selected upstream model and account; this does not add image generation.
 
 ### Requirements
 
