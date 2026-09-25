@@ -146,6 +146,28 @@ test('account pool fails over quota errors without changing the requested model'
   assert.deepEqual(models, ['gemini-3.8-flash-high', 'gemini-3.8-flash-high']);
 });
 
+test('network failure refreshing agy auth gets a short transient cooldown', async (t) => {
+  const store = tempStore(t);
+  const saved = store.save(account('one@example.com'));
+  const pool = new AccountPool({
+    store,
+    fallbackProvider: {},
+    providerFactory: () => ({
+      send: async () => {
+        const error = new Error('本地 agy 登录态刷新请求失败。');
+        error.status = 502;
+        error.code = 'local_agy_refresh_failed';
+        throw error;
+      }
+    })
+  });
+  const before = Date.now();
+  await assert.rejects(pool.send({}, 'gemini-3.8-flash-high'), /登录态刷新请求失败/);
+  const entry = pool.entries.get(saved.id);
+  assert.ok(entry.cooldownUntil >= before + 15_000);
+  assert.ok(entry.cooldownUntil < before + 30_000);
+});
+
 test('account pool does not hide request/schema errors by switching accounts', async (t) => {
   const store = tempStore(t);
   store.save(account('one@example.com'));

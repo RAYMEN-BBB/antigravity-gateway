@@ -11,7 +11,7 @@ const ENVIRONMENT_KEYS = new Set([
   'PATH', 'HOME', 'USERPROFILE', 'TMPDIR', 'TEMP', 'TMP',
   'HTTP_PROXY', 'HTTPS_PROXY', 'ALL_PROXY', 'NO_PROXY',
   'http_proxy', 'https_proxy', 'all_proxy', 'no_proxy',
-  'NODE_EXTRA_CA_CERTS', 'SSL_CERT_FILE', 'SSL_CERT_DIR',
+  'NODE_OPTIONS', 'NODE_EXTRA_CA_CERTS', 'SSL_CERT_FILE', 'SSL_CERT_DIR',
   'DBUS_SESSION_BUS_ADDRESS'
 ]);
 

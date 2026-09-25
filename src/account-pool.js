@@ -37,9 +37,9 @@ function retryDelay(details, fallback = DEFAULT_COOLDOWN_MS) {
 function errorCategory(error) {
   const status = Number(error?.status) || 0;
   const source = `${error?.code || ''} ${error?.message || ''} ${error?.details || ''}`;
+  if (status >= 500 || /fetch failed|network|timeout|econnreset|socket/i.test(source)) return 'transient';
   if (status === 401 || /invalid_grant|refresh token|auth.*missing|登录态|unauthenticated/i.test(source)) return 'auth';
   if (status === 429 || /resource.*exhausted|quota|rate.?limit/i.test(source)) return 'quota';
-  if (status >= 500 || /fetch failed|network|timeout|econnreset|socket/i.test(source)) return 'transient';
   return 'request';
 }
 
