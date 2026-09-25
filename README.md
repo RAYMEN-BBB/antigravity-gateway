@@ -353,6 +353,14 @@ npm uninstall --global antigravity-gateway
 
 先在官方 `agy` 中重新登录并完成一次正常对话，然后重启网关。输入 `acc` 检查账号池状态。
 
+如果 `curl https://oauth2.googleapis.com/token` 能连通，但 Node 请求 Google 一直超时，macOS 上可尝试用 IPv4 优先并关闭 Node 自动选路重新安装后台服务：
+
+```bash
+NODE_OPTIONS='--no-network-family-autoselection --dns-result-order=ipv4first' antigravity-gateway service start
+```
+
+此选项只调整 Node 的连接选择，不会增加账号额度，也不能解决 Google 的账号资格检查。
+
 #### `429 Resource has been exhausted`
 
 通常表示当前账号或模型额度受限。网关会尝试其他可用账号；如果所有账号都受限，请等待额度恢复或切换模型。
@@ -652,6 +660,7 @@ Restart the foreground process after updating, or run `antigravity-gateway servi
 Common failures:
 
 - `401`: sign in through official agy again, complete one successful conversation, restart the gateway, and check `acc`.
+- If curl can reach Google but Node times out on macOS, retry background setup with `NODE_OPTIONS='--no-network-family-autoselection --dns-result-order=ipv4first' antigravity-gateway service start`.
 - `429`: the account/model is rate-limited or out of quota; wait, switch models, or add another account.
 - `EADDRINUSE`: stop the old process or use `antigravity-gateway --port 9898`, then update the client URL.
 - No gateway request log: verify `ANTHROPIC_BASE_URL` and remove Bedrock/Vertex/Foundry provider switches.

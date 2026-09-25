@@ -491,6 +491,27 @@ test('local agy auth adapter reads jetski state and does not write refreshed pla
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+test('macOS agy auth refresh falls back to curl without exposing credentials in argv', async () => {
+  let curlArgs;
+  let curlInput;
+  const auth = new LocalAgyAuthProvider({
+    platform: 'darwin',
+    useKeychain: false,
+    clientCredentials: [{ clientId: 'test-client', clientSecret: 'test-secret' }],
+    fetchImpl: async () => { throw new Error('fetch failed'); },
+    execFileSyncImpl: (binary, args, options) => {
+      assert.equal(binary, '/usr/bin/curl');
+      curlArgs = args;
+      curlInput = options.input;
+      return '{"access_token":"refreshed-token","expires_in":3600}\n200';
+    }
+  });
+  const result = await auth.refresh(undefined, 'private-refresh-token');
+  assert.equal(result.accessToken, 'refreshed-token');
+  assert.match(curlInput, /private-refresh-token/);
+  assert.doesNotMatch(curlArgs.join(' '), /private-refresh-token|test-secret/);
+});
+
 test('Windows local agy auth reads the official antigravity-cli session without changing macOS paths', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'antigravity-windows-auth-test-'));
   const windowsFile = path.join(dir, '.gemini', 'antigravity-cli', 'antigravity-oauth-token');

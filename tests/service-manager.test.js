@@ -56,6 +56,7 @@ test('service name and environment are constrained', () => {
   assert.deepEqual(serviceEnvironment({
     HOME: '/home/test',
     PATH: '/usr/bin',
+    NODE_OPTIONS: '--no-network-family-autoselection',
     ANTIGRAVITY_GATEWAY_PORT: '19996',
     ANTIGRAVITY_GATEWAY_API_KEY: 'secret',
     ANTIGRAVITY_GATEWAY_SERVICE_NAME: 'ignored',
@@ -63,6 +64,7 @@ test('service name and environment are constrained', () => {
   }), {
     HOME: '/home/test',
     PATH: '/usr/bin',
+    NODE_OPTIONS: '--no-network-family-autoselection',
     ANTIGRAVITY_GATEWAY_PORT: '19996',
     ANTIGRAVITY_GATEWAY_API_KEY: 'secret'
   });

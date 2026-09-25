@@ -340,7 +340,22 @@ class LocalAgyAuthProvider {
       try {
         response = await this.fetchImpl(this.tokenEndpoint, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: form, signal });
       } catch (cause) {
-        throw new LocalAgyAuthError('本地 agy 登录态刷新请求失败。', { code: 'local_agy_refresh_failed', status: 502, cause });
+        if (this.platform !== 'darwin' || !this.tokenEndpoint.startsWith('https://')) {
+          throw new LocalAgyAuthError('本地 agy 登录态刷新请求失败。', { code: 'local_agy_refresh_failed', status: 502, cause });
+        }
+        try {
+          const output = this.execFileSyncImpl('/usr/bin/curl', [
+            '--silent', '--show-error', '--max-time', '10', '--request', 'POST',
+            '--header', 'content-type: application/x-www-form-urlencoded',
+            '--data-binary', '@-', '--write-out', '\n%{http_code}', this.tokenEndpoint
+          ], { input: form.toString(), encoding: 'utf8', timeout: 12_000, maxBuffer: 1024 * 1024, stdio: ['pipe', 'pipe', 'ignore'] });
+          const split = output.lastIndexOf('\n');
+          const status = Number(output.slice(split + 1));
+          if (split < 0 || !Number.isInteger(status) || status < 100 || status > 599) throw new Error('invalid curl response');
+          response = new Response(output.slice(0, split), { status });
+        } catch (fallbackCause) {
+          throw new LocalAgyAuthError('本地 agy 登录态刷新请求失败。', { code: 'local_agy_refresh_failed', status: 502, cause: fallbackCause });
+        }
       }
       const text = await response.text();
       lastStatus = response.status;
